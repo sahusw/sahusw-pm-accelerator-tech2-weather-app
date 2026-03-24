@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherVault - Simple Weather App</title>
+    
+    <!-- CSS styles -->
+    <style>
+        /* basic reset & body */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* makes width/height include padding & border */
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        /* layout containers */
+        .container {
+            max-width: 900px;
+            margin: 0 auto; /* (centers container) */
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* nav tabs */
+        .tabs {
+            display: flex; /* puts buttons in a row */
+            gap: 10px; /* space between buttons */
+            justify-content: center; /* centers the buttons */
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* wraps to next line on small screens */
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tab-btn.active {
+            background: #00d4ff;
+        }
+
+        /* tab content sections */
+        .tab-content {
+            display: none; /* (hidden by default) */
+        }
+
+        .tab-content.active {
+            display: block; /* (shown when active) */
+        }
+
+        /* cards (reusable box style) */
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* form elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block; /* (makes label take full width) */
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none; /* (removes default blue outline) */
+            border-color: #00d4ff; /* (custom focus color) */
+        }
+
+        /* buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        /* weather display */
+        .weather-display {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .temperature {
+            font-size: 5rem;
+            font-weight: 200;
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* responsive grid */
+            gap: 16px;
+            margin-top: 30px;
+        }
+
+        .detail-box {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .detail-box .icon {
+            font-size: 1.5rem;
+        }
+
+        .detail-box .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .detail-box .label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* search results dropdown */
+        .search-results {
+            background: #1a1a2e;
+            border-radius: 8px;
+            margin-top: 8px;
+            max-height: 200px;
+            overflow-y: auto; /* (scrollable if too many results) */
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .search-result-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* records table */
+        .records-table {
+            width: 100%;
+            border-collapse: collapse; /* (removes gaps between cells) */
+            margin-top: 16px;
+        }
+
+        .records-table th,
+        .records-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .records-table th {
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* action buttons in table */
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btns button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* error & sucess messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .message.error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .message.success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        /* export buttons */
+        .export-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* loading spinner */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* hidden class (utility) */
+        .hidden {
+            display: none !important;
+        }
+
+        /* modal (popup) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 2-column layout */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* (on small screens, stack vertically) */
+        @media (max-width: 600px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML Structure -->
+    
+    <div class="container">
+        <!-- header -->
+        <header>
+            <h1>🌤️ WeatherApp</h1>
+            <p>(simple weather app with database)</p>
+        </header>
+
+        <!-- nav tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="showTab('current')">Current</button>
+            <button class="tab-btn" onclick="showTab('historical')">Historical</button>
+            <button class="tab-btn" onclick="showTab('records')">Records</button>
+            <button class="tab-btn" onclick="showTab('export')">Export</button>
+        </nav>
+
+        <!-- message area (for errors/success) -->
+        <div id="message" class="message hidden"></div>
+
+        <!-- tab 1: curr weather -->
+        <div id="tab-current" class="tab-content active">
+            <div class="card">
+                <h2>Search Location</h2>
+                
+                <!-- search input -->
+                <div class="form-group">
+                    <label for="search-input">Enter city, zip code, or landmark:</label>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        onkeyup="handleSearch()"
+                    >
+                </div>
+                
+                <!-- search results dropdown (hidden until results come in) -->
+                <div id="search-results" class="search-results hidden"></div>
+            </div>
+
+            <!-- weather display (hidden until location is selected) -->
+            <div id="weather-card" class="card hidden">
+                <h2 id="location-name">Loading...</h2>
+                
+                <div class="weather-display">
+                    <span id="weather-icon" class="weather-icon"></span>
+                    <span id="temperature" class="temperature">--°</span>
+                    <p id="weather-desc">--</p>
+                </div>
+
+                <div class="weather-details">
+                    <div class="detail-box">
+                        <div class="icon"></div>
+                        <div class="value" id="feels-like">--</div>
+                        <div class="label">Feels Like</div>
+                    </div>
+                    <div class="detail-box">
+                        <div class="icon"></div>
+                        <div class="value" id="humidity">--</div>
+                        <div class="label">Humidity</div>
+                    </div>
+                    <div class="detail-box">
+                        <div class="icon"></div>
+                        <div class="value" id="wind">--</div>
+                        <div class="label">Wind</div>
+                    </div>
+                    <div class="detail-box">
+                        <div class="icon"></div>
+                        <div class="value" id="precipitation">--</div>
+                        <div class="label">Precipitation</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- google maps (hidden until location is selected) -->
+            <div id="map-card" class="card hidden">
+                <h2>Location Map</h2>
+                <iframe 
+                    id="google-map"
+                    width="100%" 
+                    height="300" 
+                    style="border:0; border-radius:12px;" 
+                    loading="lazy"
+                    src=""
+                ></iframe>
+            </div>
+        </div>
+
+        <!-- tab 2: historical weather (create) -->
+        <div id="tab-historical" class="tab-content">
+            <div class="card">
+                <h2>Save Historical Weather</h2>
+                <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px;">
+                    Search for a location above, then select a date range to save weather data to the database.
+                </p>
+
+                <!-- selected location display -->
+                <div id="selected-location" class="form-group" style="background: rgba(0,212,255,0.1); padding: 16px; border-radius: 8px;">
+                    <strong>Selected Location:</strong>
+                    <span id="selected-location-text">None - please search and select a location first</span>
+                </div>
+
+                <!-- date range inputs -->
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label for="start-date">Start Date:</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="end-date">End Date:</label>
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+
+                <!-- save button -->
+                <button class="btn btn-primary" onclick="saveHistoricalWeather()" style="width: 100%;">
+                    Fetch & Save to Database
+                </button>
+
+                <!-- validation rules info -->
+                <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <strong>Validation Rules:</strong>
+                    <ul style="margin-top: 10px; padding-left: 20px; color: rgba(255,255,255,0.6);">
+                        <li>Date range: 1940 to today</li>
+                        <li>Maximum span: 365 days</li>
+                        <li>Start date must be before end date</li>
+                        <li>Location must be selected from search results</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- tab 3: records (read, update, delete) -->
+        <div id="tab-records" class="tab-content">
+            <div class="card">
+                <h2>Saved Weather Records</h2>
+                
+                <!-- Records will be inserted here by JavaScript -->
+                <div id="records-container">
+                    <p class="loading">Loading records...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- tab 4: export -->
+        <div id="tab-export" class="tab-content">
+            <div class="card" style="text-align: center;">
+                <h2>Export Data</h2>
+                <p style="color: rgba(255,255,255,0.6); margin-bottom: 30px;">
+                    Download all your saved weather records.
+                </p>
+
+                <!-- stats display -->
+                <div class="two-columns" style="max-width: 400px; margin: 0 auto 30px;">
+                    <div class="detail-box">
+                        <div class="value" id="total-records">0</div>
+                        <div class="label">Total Records</div>
+                    </div>
+                    <div class="detail-box">
+                        <div class="value" id="total-locations">0</div>
+                        <div class="label">Locations</div>
+                    </div>
+                </div>
+
+                <!-- export button -->
+                <div class="export-button">
+                    <button class="btn btn-success" onclick="exportToPDF()">
+                        Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- edit modal (popup for editing records) -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Record</h2>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            
+            <!-- hidden field to store the record ID being edited -->
+            <input type="hidden" id="edit-id">
+            
+            <div class="form-group">
+                <label for="edit-location">Location Name:</label>
+                <input type="text" id="edit-location">
+            </div>
+            
+            <div class="two-columns">
+                <div class="form-group">
+                    <label for="edit-start-date">Start Date:</label>
+                    <input type="date" id="edit-start-date">
+                </div>
+                <div class="form-group">
+                    <label for="edit-end-date">End Date:</label>
+                    <input type="date" id="edit-end-date">
+                </div>
+            </div>
+            
+            <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px;">
+                Note: Changing dates will re-fetch weather data.
+            </p>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="updateRecord()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- javascript -->
+    <script>
+        //////////////////////////////////////////////////
+        // GLOBAL VARIABLES
+        //////////////////////////////////////////////////
+        
+        //stores the currently selected location from search
+        let selectedLocation = null;
+        
+        //timer for debouncing search (waits for user to stop typing)
+        let searchTimeout = null;
+
+        //////////////////////////////////////////////////
+        // database functions (using localStorage)
+        //////////////////////////////////////////////////
+        //(localStorage is a simple browser storage that persists data
+        // even after closing the browser. It stores data as strings.)
+        
+        /*get all records from the database, returns {Array} Array of weather records*/
+        function getRecords() {
+            // Get the stored JSON string, or empty array if nothing stored
+            const data = localStorage.getItem('weatherRecords');
+            // Parse JSON string back to JavaScript array
+            return data ? JSON.parse(data) : [];
+        }
+
+        /*save records to the database, param {Array} records - array of records to save*/
+        function saveRecords(records) {
+            // Convert array to JSON string and store it
+            localStorage.setItem('weatherRecords', JSON.stringify(records));
+        }
+
+        /*create - add a new record to the database, param {Object} record - the record to add
+         returns {number} the ID of the new record*/
+        function createRecord(record) {
+            const records = getRecords();
+            
+            //generate a unique ID (timestamp + random number)
+            record.id = Date.now();
+            record.createdAt = new Date().toISOString();
+            
+            //add to array and save
+            records.push(record);
+            saveRecords(records);
+            
+            return record.id;
+        }
+
+        /*read - get a single record by ID, param {number} id - the record ID
+         returns {Object|null} the record or null if not found*/
+        function getRecordById(id) {
+            const records = getRecords();
+            // find() returns the first matching item or undefined
+            return records.find(r => r.id === id) || null;
+        }
+
+        /*update - Update an existing record, param {number} id - The record ID
+         param {Object} updates - the fields to update, returns {boolean} True if successful*/
+        function updateRecordInDb(id, updates) {
+            const records = getRecords();
+            //findIndex() returns the position of the matching item
+            const index = records.findIndex(r => r.id === id);
+            
+            if (index === -1) return false; // Record not found
+            
+            //merge existing record with updates
+            records[index] = { ...records[index], ...updates };
+            records[index].updatedAt = new Date().toISOString();
+            
+            saveRecords(records);
+            return true;
+        }
+
+        /*delete - remove a record from the database, param {number} id - the record ID,
+         returns {boolean} true if successful*/
+        function deleteRecord(id) {
+            const records = getRecords();
+            // filter() creates a new array without the matching item
+            const filtered = records.filter(r => r.id !== id);
+            
+            if (filtered.length === records.length) return false; // Nothing deleted
+            
+            saveRecords(filtered);
+            return true;
+        }
+
+        //////////////////////////////////////////////////
+        // TAB NAVIGATION
+        //////////////////////////////////////////////////
+
+        /*show a specific tab and hide others, param {string} tabName - 
+        the tab to show (current, historical, records, export)*/
+        function showTab(tabName) {
+            //hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            //remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            //show the selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            //find and activate the correct button
+            //use the button's text content to match
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            //refresh data when showing certain tabs
+            if (tabName === 'records') {
+                displayRecords();
+            } else if (tabName === 'export') {
+                updateExportStats();
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // MESSAGE DISPLAY
+        //////////////////////////////////////////////////
+
+        /*show a message to the user, param {string} text - the message text, 
+         param {string} type - 'error' or 'success'*/
+        function showMessage(text, type = 'error') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+            messageEl.classList.remove('hidden');
+            
+            //auto-hide after 5 seconds
+            setTimeout(() => {
+                messageEl.classList.add('hidden');
+            }, 5000);
+        }
+
+        //////////////////////////////////////////////////
+        // WEATHER API FUNCTIONS
+        //////////////////////////////////////////////////
+
+        /*search for locations using Open-Meteo Geocoding API, param {string} query - 
+         the search query, returns {Promise<Array>} Array of location results*/
+        async function searchLocations(query) {
+            //construct the API URL
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en`;
+            
+            //fetch() makes an HTTP request and returns a Promise
+            const response = await fetch(url);
+
+            //parse the JSON response
+            const data = await response.json();
+            
+            //return results or empty array
+            return data.results || [];
+        }
+
+        /*get current weather for a location, returns {Promise<Object>} weather data*/
+        async function getCurrentWeather(lat, lon) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m`;
+            
+            const response = await fetch(url);
+            return response.json();
+        }
+
+        /*same as above func but w startDate and endDate*/
+        async function getHistoricalWeather(lat, lon, startDate, endDate) {
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weather_code`;
+            
+            const response = await fetch(url);
+            return response.json();
+        }
+
+        //////////////////////////////////////////////////
+        // WEATHER CODE MAPPINGS
+        //////////////////////////////////////////////////
+
+        /*convert weather code to emoji icon, param {number} code - 
+         weather code from API, returns {string} emoji representing the weather*/
+        function getWeatherIcon(code) {
+            //weather codes are standardized by WMO (World Meteorological Organization)
+            const icons = {
+                0: '☀️', //clear sky
+                1: '🌤️', //mainly clear
+                2: '⛅', //partly cloudy
+                3: '☁️', //overcast
+                45: '🌫️', //foggy
+                48: '🌫️', //rime fog
+                51: '🌧️', //light drizzle
+                53: '🌧️', //moderate drizzle
+                55: '🌧️', //dense drizzle
+                61: '🌧️', //slight rain
+                63: '🌧️', //moderate rain
+                65: '🌧️', //heavy rain
+                71: '🌨️', //slight snow
+                73: '🌨️', //moderate snow
+                75: '🌨️', //heavy snow
+                95: '⛈️', //thunderstorm
+            };
+            return icons[code] || '🌡️';
+        }
+
+        /*convert weather code to description, param {number} code - 
+         weather code from API, returns {string} human-readable description*/
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Clear sky',
+                1: 'Mainly clear',
+                2: 'Partly cloudy',
+                3: 'Overcast',
+                45: 'Foggy',
+                48: 'Rime fog',
+                51: 'Light drizzle',
+                53: 'Moderate drizzle',
+                55: 'Dense drizzle',
+                61: 'Slight rain',
+                63: 'Moderate rain',
+                65: 'Heavy rain',
+                71: 'Slight snow',
+                73: 'Moderate snow',
+                75: 'Heavy snow',
+                95: 'Thunderstorm',
+            };
+            return descriptions[code] || 'Unknown';
+        }
+
+        //////////////////////////////////////////////////
+        // UNIT CONVERSION FUNCTIONS
+        //////////////////////////////////////////////////
+
+        /*convert Celsius to Fahrenheit, formula: F = (C × 9/5) + 32*/
+        function celsiusToFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+
+        /*convert kilometers per hour to miles per hour, formula: mph = km/h × 0.621371*/
+        function kmhToMph(kmh) {
+            return kmh * 0.621371;
+        }
+
+        /*format date from YYYY-MM-DD to MM-DD-YYYY (US format)*/
+        function formatDateUS(dateStr) {
+            // Split the date string by the hyphen
+            // "2024-03-15" → ["2024", "03", "15"]
+            const parts = dateStr.split('-');
+            
+            // Rearrange: [year, month, day] → month-day-year
+            return `${parts[1]}-${parts[2]}-${parts[0]}`;
+        }
+
+        //////////////////////////////////////////////////
+        // SEARCH FUNCTIONALITY
+        //////////////////////////////////////////////////
+
+        /*handle search input with debouncing, debouncing waits for the 
+         user to stop typing before searching*/
+        function handleSearch() {
+            //get the search input value
+            const query = document.getElementById('search-input').value.trim();
+            
+            //clear any existing timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            //hide results if query is too short
+            if (query.length < 2) {
+                document.getElementById('search-results').classList.add('hidden');
+                return;
+            }
+            
+            //wait 300ms after user stops typing, then search
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const results = await searchLocations(query);
+                    displaySearchResults(results);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    showMessage('Failed to search locations');
+                }
+            }, 300);
+        }
+
+        /*display search results in dropdown, param {Array} results - 
+         array of location results*/
+        function displaySearchResults(results) {
+            const container = document.getElementById('search-results');
+            
+            if (results.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            //build HTML for each result
+            //map() transforms each item, join() combines them into one string
+            container.innerHTML = results.map((loc, index) => `
+                <div class="search-result-item" onclick="selectLocation(${index})">
+                    <strong>📍 ${loc.name}</strong>
+                    <br>
+                    <small style="color: rgba(255,255,255,0.5);">
+                        ${loc.admin1 || ''} ${loc.country || ''} 
+                        (${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°)
+                    </small>
+                </div>
+            `).join('');
+            
+            //store results globally so selectLocation can access them
+            window.searchResults = results;
+            
+            container.classList.remove('hidden');
+        }
+
+        /*handle selection of a search result, param {number} index - 
+         index of the selected result*/
+        async function selectLocation(index) {
+            //get the selected location from stored results
+            const location = window.searchResults[index];
+            selectedLocation = location;
+            
+            //update the search input with the location name
+            document.getElementById('search-input').value = location.name;
+            
+            //hide search results
+            document.getElementById('search-results').classList.add('hidden');
+            
+            //update the "selected location" text in the Historical tab
+            document.getElementById('selected-location-text').textContent = 
+                `${location.name}, ${location.country || ''} (${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°)`;
+            
+            //fetch and display current weather
+            try {
+                const weather = await getCurrentWeather(location.latitude, location.longitude);
+                displayCurrentWeather(location, weather);
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                showMessage('Failed to fetch weather data');
+            }
+        }
+
+        /*display current weather data*/
+        function displayCurrentWeather(location, weather) {
+            //show the weather card
+            document.getElementById('weather-card').classList.remove('hidden');
+            
+            //update location name
+            document.getElementById('location-name').textContent = 
+                `${location.name}, ${location.country || ''}`;
+            
+            //get current weather data
+            const current = weather.current;
+            
+            //update weather display (converting to Fahrenheit)
+            document.getElementById('weather-icon').textContent = getWeatherIcon(current.weather_code);
+            document.getElementById('temperature').textContent = `${celsiusToFahrenheit(current.temperature_2m).toFixed(1)}°F`;
+            document.getElementById('weather-desc').textContent = getWeatherDescription(current.weather_code);
+            
+            //update details (with unit conversions)
+            document.getElementById('feels-like').textContent = `${celsiusToFahrenheit(current.apparent_temperature).toFixed(1)}°F`;
+            document.getElementById('humidity').textContent = `${current.relative_humidity_2m}%`;
+            document.getElementById('wind').textContent = `${kmhToMph(current.wind_speed_10m).toFixed(1)} mph`;
+            document.getElementById('precipitation').textContent = `${current.precipitation} mm`;
+            
+            //show and update google map
+            document.getElementById('map-card').classList.remove('hidden');
+            document.getElementById('google-map').src = 
+                `https://www.google.com/maps/embed/v1/place?key=/*replacewithAPIkey*/&q=${location.latitude},${location.longitude}&zoom=10`;
+        }
+
+        //////////////////////////////////////////////////
+        // CRUD stuff (user-facing functions)
+        //////////////////////////////////////////////////
+
+        /*validate date range for historical weather, 
+         returns {string|null} Error message or null if valid*/
+        function validateDates(startDate, endDate) {
+            const today = new Date().toISOString().split('T')[0]; //get today as YYYY-MM-DD
+            const minDate = '1940-01-01';
+            
+            if (!startDate || !endDate) {
+                return 'Please select both start and end dates';
+            }
+            if (startDate > endDate) {
+                return 'Start date must be before end date';
+            }
+            if (startDate < minDate) {
+                return 'Start date cannot be before 1940';
+            }
+            if (endDate > today) {
+                return 'End date cannot be in the future';
+            }
+            
+            //calc days difference
+            const daysDiff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+            if (daysDiff > 365) {
+                return 'Date range cannot exceed 365 days';
+            }
+            
+            return null; // No error
+        }
+
+        /*create - save historical weather to database*/
+        async function saveHistoricalWeather() {
+            //validate location is selected
+            if (!selectedLocation) {
+                showMessage('Please search and select a location first');
+                return;
+            }
+            
+            //get date values
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            //validate dates
+            const dateError = validateDates(startDate, endDate);
+            if (dateError) {
+                showMessage(dateError);
+                return;
+            }
+            
+            try {
+                //fetch historical weather data
+                const weatherData = await getHistoricalWeather(
+                    selectedLocation.latitude,
+                    selectedLocation.longitude,
+                    startDate,
+                    endDate
+                );
+                
+                //check for API errors
+                if (weatherData.error) {
+                    throw new Error(weatherData.reason || 'API error');
+                }
+                
+                //create the record object
+                const record = {
+                    locationName: selectedLocation.name,
+                    latitude: selectedLocation.latitude,
+                    longitude: selectedLocation.longitude,
+                    country: selectedLocation.country || '',
+                    startDate: startDate,
+                    endDate: endDate,
+                    weatherData: weatherData
+                };
+                
+                //save to database
+                createRecord(record);
+                
+                //show success message and switch to records tab
+                showMessage('Weather data saved successfully!', 'success');
+                showTab('records');
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('Failed to fetch and save weather data');
+            }
+        }
+
+        /*read - display all records in the records tab*/
+        function displayRecords() {
+            const records = getRecords();
+            const container = document.getElementById('records-container');
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                        <p style="font-size: 3rem;"></p>
+                        <p>No records yet. Save some historical weather data first!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            //build HTML table
+            container.innerHTML = `
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Date Range</th>
+                            <th>Days</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records.map(record => `
+                            <tr>
+                                <td>
+                                    <strong>📍 ${record.locationName}</strong>
+                                    <br>
+                                    <small style="color: rgba(255,255,255,0.5);">
+                                        ${record.country}
+                                    </small>
+                                </td>
+                                <td>${formatDateUS(record.startDate)} → ${formatDateUS(record.endDate)}</td>
+                                <td>${record.weatherData.daily?.time?.length || 0}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn btn-secondary" onclick="viewRecord(${record.id})"></button>
+                                        <button class="btn btn-success" onclick="openEditModal(${record.id})"></button>
+                                        <button class="btn btn-danger" onclick="confirmDelete(${record.id})"></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        /*view - display detailed weather data for a record, 
+         param {number} id - record ID*/
+        function viewRecord(id) {
+            const record = getRecordById(id);
+            if (!record) {
+                showMessage('Record not found');
+                return;
+            }
+            
+            //build detailed view in an alert
+            const daily = record.weatherData.daily;
+            let details = `Weather Data for ${record.locationName}\n`;
+            details += `Date Range: ${formatDateUS(record.startDate)} to ${formatDateUS(record.endDate)}\n\n`;
+            details += `Date\t\tMax°C\tMin°C\tPrecip(mm)\n`;
+            details += '─'.repeat(45) + '\n';
+            
+            if (daily && daily.time) {
+                //show first 10 days (alert has limited space) & convert to fahrenheit
+                daily.time.slice(0, 10).forEach((date, i) => {
+                    const maxF = celsiusToFahrenheit(daily.temperature_2m_max[i]).toFixed(1);
+                    const minF = celsiusToFahrenheit(daily.temperature_2m_min[i]).toFixed(1);
+                    details += `${formatDateUS(date)}\t${maxF}\t${minF}\t${daily.precipitation_sum[i]?.toFixed(1)}\n`;
+                });
+                
+                if (daily.time.length > 10) {
+                    details += `\n... and ${daily.time.length - 10} more days`;
+                }
+            }
+            
+            alert(details);
+        }
+
+        /*open the edit modal for a record, param {number} id - record ID*/
+        function openEditModal(id) {
+            const record = getRecordById(id);
+            if (!record) {
+                showMessage('Record not found');
+                return;
+            }
+            
+            //fill in form fields
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-location').value = record.locationName;
+            document.getElementById('edit-start-date').value = record.startDate;
+            document.getElementById('edit-end-date').value = record.endDate;
+            
+            //show modal
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        /*close the edit modal*/
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        /*update - save changes from edit modal*/
+        async function updateRecord() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const locationName = document.getElementById('edit-location').value.trim();
+            const startDate = document.getElementById('edit-start-date').value;
+            const endDate = document.getElementById('edit-end-date').value;
+            
+            //validate
+            if (!locationName) {
+                showMessage('Location name is required');
+                return;
+            }
+            
+            const dateError = validateDates(startDate, endDate);
+            if (dateError) {
+                showMessage(dateError);
+                return;
+            }
+            
+            //get the original record
+            const record = getRecordById(id);
+            
+            //check if dates changed - if so, re-fetch weather
+            let weatherData = record.weatherData;
+            if (record.startDate !== startDate || record.endDate !== endDate) {
+                try {
+                    weatherData = await getHistoricalWeather(
+                        record.latitude,
+                        record.longitude,
+                        startDate,
+                        endDate
+                    );
+                } catch (error) {
+                    showMessage('Failed to fetch updated weather data');
+                    return;
+                }
+            }
+            
+            //update record
+            updateRecordInDb(id, {
+                locationName,
+                startDate,
+                endDate,
+                weatherData
+            });
+            
+            //close modal and refresh display
+            closeEditModal();
+            displayRecords();
+            showMessage('Record updated successfully!', 'success');
+        }
+
+        /*delete - confirm and delete a record, param {number} id - record ID*/
+        function confirmDelete(id) {
+            //confirm() shows a browser dialog with OK/Cancel
+            if (confirm('Are you sure you want to delete this record?')) {
+                deleteRecord(id);
+                displayRecords();
+                showMessage('Record deleted', 'success');
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // EXPORT FUNCTIONS
+        //////////////////////////////////////////////////
+
+        /*update statistics on the export tab */
+        function updateExportStats() {
+            const records = getRecords();
+            
+            document.getElementById('total-records').textContent = records.length;
+            
+            // Count unique locations using Set
+            const uniqueLocations = new Set(records.map(r => r.locationName));
+            document.getElementById('total-locations').textContent = uniqueLocations.size;
+        }
+
+        /*export all records as PDF (opens print dialog)*/
+        function exportToPDF() {
+            const records = getRecords();
+            
+            if (records.length === 0) {
+                showMessage('No records to export');
+                return;
+            }
+            
+            //build HTML content for the PDF
+            let html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Weather Records Export</title>
+                    <style>
+                        body { font-family: Georgia, serif; padding: 40px; }
+                        h1 { color: #16213e; border-bottom: 2px solid #00d4ff; }
+                        .record { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+                        th { background: #f5f5f5; }
+                    </style>
+                </head>
+                <body>
+                    <h1>🌤️ Weather Records Export</h1>
+                    <p>Generated: ${new Date().toLocaleString()}</p>
+            `;
+            
+            //add each record
+            records.forEach(record => {
+                html += `
+                    <div class="record">
+                        <h2>📍 ${record.locationName}, ${record.country}</h2>
+                        <p><strong>Coordinates:</strong> ${record.latitude.toFixed(4)}, ${record.longitude.toFixed(4)}</p>
+                        <p><strong>Date Range:</strong> ${formatDateUS(record.startDate)} to ${formatDateUS(record.endDate)}</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Max °C</th>
+                                    <th>Min °C</th>
+                                    <th>Mean °C</th>
+                                    <th>Precip (mm)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                //add weather data rows (converting to fahrenheit)
+                const daily = record.weatherData.daily;
+                if (daily && daily.time) {
+                    daily.time.forEach((date, i) => {
+                        //convert each temperature from Celsius to Fahrenheit
+                        const maxF = daily.temperature_2m_max?.[i] ? celsiusToFahrenheit(daily.temperature_2m_max[i]).toFixed(1) : '-';
+                        const minF = daily.temperature_2m_min?.[i] ? celsiusToFahrenheit(daily.temperature_2m_min[i]).toFixed(1) : '-';
+                        const meanF = daily.temperature_2m_mean?.[i] ? celsiusToFahrenheit(daily.temperature_2m_mean[i]).toFixed(1) : '-';
+                        
+                        html += `
+                            <tr>
+                                <td>${formatDateUS(date)}</td>
+                                <td>${maxF}</td>
+                                <td>${minF}</td>
+                                <td>${meanF}</td>
+                                <td>${daily.precipitation_sum?.[i]?.toFixed(1) || '0'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </body>
+                </html>
+            `;
+            
+            //open in new window and print
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            
+            //wait for content to load, then print
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        //////////////////////////////////////////////////
+        // INITIALIZATION
+        //////////////////////////////////////////////////
+        
+        //run when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            //set default date constraints
+            const today = new Date().toISOString().split('T')[0];
+            
+            //set max date to today for date inputs
+            document.getElementById('start-date').max = today;
+            document.getElementById('end-date').max = today;
+            document.getElementById('edit-start-date').max = today;
+            document.getElementById('edit-end-date').max = today;
+            
+            //set min date to 1940
+            document.getElementById('start-date').min = '1940-01-01';
+            document.getElementById('end-date').min = '1940-01-01';
+            document.getElementById('edit-start-date').min = '1940-01-01';
+            document.getElementById('edit-end-date').min = '1940-01-01';
+            
+            //initialize records display
+            displayRecords();
+            updateExportStats();
+            
+            console.log('WeatherVault initialized! 🌤️');
+        });
+    </script>
+</body>
+</html>
