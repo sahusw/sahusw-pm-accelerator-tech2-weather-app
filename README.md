@@ -3,7 +3,7 @@ Project Description: A weather app built with HTML using the Google Weather API 
 How to Run:
 1. Download the weather-app.html file from Github on your computer.
 2. Look up this line: `https://www.google.com/maps/embed/v1/place?key=/*replacewithAPIkey*/&q=${location.latitude},${location.longitude}&zoom=10`;
-3. Replace /'*'eplacewithAPIkey'*'/ with your Google API key (Google Weather API must be enabled). 
+3. Replace /*replacewithAPIkey*/ with your Google API key (Google Weather API must be enabled). 
 4. Double-click on the weather-app.html file to run.
 
 **Note: There is no requirements file because no libraries/packages needed to be installed.
